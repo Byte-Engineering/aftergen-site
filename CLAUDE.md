@@ -2,8 +2,8 @@
 
 ## Project Overview
 
-Aftergen marketing website — a single-page static site advertising operational
-improvement services (automation, GenAI enablement, data platforms, change management).
+AfterGen marketing website — a static site advertising operational improvement
+services (automation, GenAI enablement, data platforms, change management).
 
 ## Tech Stack
 
@@ -16,20 +16,29 @@ improvement services (automation, GenAI enablement, data platforms, change manag
 ```
 ├── assets/
 │   └── styles.css       # All styles, dark theme, responsive (breakpoint: 720px)
-├── index.html           # Entire single-page site
+├── index.html           # Main single-page site
+├── privacy.html         # Simple privacy policy page
 ├── README.md            # Basic run instructions
 └── CLAUDE.md            # This file
 ```
 
-## Page Sections (anchor nav)
+## Pages
 
-- `#top` — Hero with value proposition, stats, CTAs
-- `#services` — 4 service cards
+### index.html — Main site (anchor nav)
+
+- `#top` — Hero with value proposition, stats, CTA (discovery call email)
+- `#services` — 4 service cards (Automation, GenAI, Data, Adoption)
 - `#approach` — Methodology, proof metrics, timeline
-- `#process` — 4-step delivery playbook
+- `#process` — 4-step delivery playbook + focus/prioritization cards + solution pillars
 - `#cases` — 7 case studies (gov, fintech, retail, consulting)
-- `#why` — Differentiators
-- `#contact` — CTA panel with Calendly + email
+- `#why` — Differentiators + industry coverage
+- `#contact` — CTA panel with discovery call email + back-to-top
+
+### privacy.html — Privacy policy
+
+- Simple placeholder policy for a static site with no tracking or forms
+- Reuses the same stylesheet and navbar as the main site
+- Brand in header is an `<a class="brand">` linking back to index.html
 
 ## Design System
 
@@ -38,13 +47,17 @@ improvement services (automation, GenAI enablement, data platforms, change manag
 - Text: `#f5f3ff` (light), `#cfc9e6` (muted)
 - Cards use semi-transparent white overlays + backdrop blur (glassmorphism)
 - Responsive grids with `auto-fit` and `clamp()` typography
+- `scroll-padding-top: 80px` on `html` to offset sticky navbar on anchor nav
+- Spacing between sibling blocks in `#process` via `#process .split, #process .stacked { margin-top: 24px }`
 
 ## Conventions
 
 - No build step — edit HTML/CSS directly
 - Keep it vanilla; do not introduce JS frameworks or bundlers unless explicitly requested
-- All content lives in index.html; styles in assets/styles.css
+- Shared styles live in `assets/styles.css`; no inline styles unless page-specific
 - Use semantic HTML and maintain the existing heading hierarchy
+- Company name is **AfterGen** (capital G)
+- New pages should reuse the same header/footer structure as index.html
 
 ## Git
 
