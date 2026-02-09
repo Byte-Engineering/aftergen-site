@@ -2,20 +2,20 @@
 
 ## Project Overview
 
-AfterGen marketing website — a static site advertising operational improvement
-services (automation, GenAI enablement, data platforms, change management).
+AfterGen marketing website — a minimalist static site positioning custom-built
+software as a faster, cheaper, and more tailored alternative to SaaS platforms.
 
 ## Tech Stack
 
 - **Pure HTML + CSS** — no frameworks, no build tools, no package.json
-- Google Fonts: Space Grotesk, IBM Plex Mono
+- Google Fonts: Space Grotesk
 - Zero dependencies — serve with any static server (e.g. `python -m http.server`)
 
 ## File Structure
 
 ```
 ├── assets/
-│   └── styles.css       # All styles, dark theme, responsive (breakpoint: 720px)
+│   └── styles.css       # All styles, dark theme, responsive (breakpoint: 600px)
 ├── index.html           # Main single-page site
 ├── privacy.html         # Simple privacy policy page
 ├── README.md            # Basic run instructions
@@ -24,15 +24,14 @@ services (automation, GenAI enablement, data platforms, change management).
 
 ## Pages
 
-### index.html — Main site (anchor nav)
+### index.html — Main site (minimalist single-page)
 
-- `#top` — Hero with value proposition, stats, CTA (discovery call email)
-- `#services` — 4 service cards (Automation, GenAI, Data, Adoption)
-- `#approach` — Methodology, proof metrics, timeline
-- `#process` — 4-step delivery playbook + focus/prioritization cards + solution pillars
-- `#cases` — 7 case studies (gov, fintech, retail, consulting)
-- `#why` — Differentiators + industry coverage
-- `#contact` — CTA panel with discovery call email + back-to-top
+- **Header**: Fixed navbar with brand + single "Contact" mailto link
+- **Hero** (`#top`): Elevator pitch manifesto (two paragraphs) + bold guarantee statement + CTA button
+- **Stats**: Three key metrics (annualized savings, cost reduction, delivery speed)
+- **Footer**: Copyright, email, privacy link
+
+Design inspired by [atlas.bio](https://atlas.bio/) — clean, text-focused, generous whitespace.
 
 ### privacy.html — Privacy policy
 
@@ -42,13 +41,12 @@ services (automation, GenAI enablement, data platforms, change management).
 
 ## Design System
 
-- Background: `#0e0a1f` (dark purple)
+- Background: `#0a0a0a` (near-black)
 - Accent: `#ff7a1a` (orange)
-- Text: `#f5f3ff` (light), `#cfc9e6` (muted)
-- Cards use semi-transparent white overlays + backdrop blur (glassmorphism)
-- Responsive grids with `auto-fit` and `clamp()` typography
-- `scroll-padding-top: 80px` on `html` to offset sticky navbar on anchor nav
-- Spacing between sibling blocks in `#process` via `#process .split, #process .stacked { margin-top: 24px }`
+- Text: `#e8e8e8` (light), `#888` (muted)
+- Max content width: `720px`
+- Typography uses `clamp()` for responsive scaling
+- Minimalist aesthetic — no cards, no glassmorphism, just text and whitespace
 
 ## Conventions
 

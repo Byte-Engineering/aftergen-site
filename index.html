@@ -8,6 +8,13 @@
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="swimlanes">
+    <span class="swimlane" data-stage="0">Discover</span>
+    <span class="swimlane" data-stage="1">Design</span>
+    <span class="swimlane" data-stage="2">Implement</span>
+    <span class="swimlane" data-stage="3">Refine</span>
+  </div>
   <header>
     <div class="navbar">
       <a class="brand" href="#top"><span class="dot"></span>AfterGen</a>
@@ -60,5 +67,323 @@
       </div>
     </div>
   </footer>
+
+  <script>
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    const swimlaneEls = document.querySelectorAll('.swimlane');
+    let width, height;
+    const accent = '#ff7a1a';
+    const nodes = [];
+    const connections = [];
+    let lastNodeTime = 0;
+    let nodeInterval = 350;
+    let startX;
+    const stages = ['Discover', 'Design', 'Implement', 'Refine'];
+    let activeStage = -1;
+    let chainComplete = false;
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      startX = 40;
+      reset();
+    }
+
+    function reset() {
+      nodes.length = 0;
+      connections.length = 0;
+      activeStage = -1;
+      chainComplete = false;
+      updateSwimlanes();
+      const startY = 150 + Math.random() * (height - 300);
+      addNode(startX, startY, null);
+    }
+
+    function startNewChain() {
+      activeStage = -1;
+      chainComplete = false;
+      updateSwimlanes();
+      const startY = 150 + Math.random() * (height - 300);
+      addNode(startX, startY, null);
+    }
+
+    function getStageForX(x) {
+      const stageWidth = width / 4;
+      return Math.min(3, Math.floor(x / stageWidth));
+    }
+
+    function updateSwimlanes() {
+      swimlaneEls.forEach((el, i) => {
+        el.classList.toggle('active', i <= activeStage);
+      });
+    }
+
+    // Get all ancestors of a node (path back to root)
+    function getAncestors(nodeIndex) {
+      const ancestors = new Set();
+      let current = nodeIndex;
+      while (current !== null) {
+        ancestors.add(current);
+        current = nodes[current].parent;
+      }
+      return ancestors;
+    }
+
+    // Prune branches not on the winning path
+    function pruneLosingBranches(winnerIndex) {
+      const winningPath = getAncestors(winnerIndex);
+      nodes.forEach((node, i) => {
+        if (!winningPath.has(i) && !node.pruned && !node.completed) {
+          node.pruned = true;
+        }
+      });
+    }
+
+    // Mark winning path as completed (very transparent) and prune the rest
+    function completeChain(winnerIndex) {
+      const winningPath = getAncestors(winnerIndex);
+      nodes.forEach((node, i) => {
+        if (winningPath.has(i)) {
+          node.completed = true;
+          node.targetAlpha = 0.08;
+        } else if (!node.completed) {
+          node.pruned = true;
+        }
+      });
+      chainComplete = true;
+      // Start new chain after a brief delay
+      setTimeout(startNewChain, 300);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    function addNode(x, y, parentIndex) {
+      const node = {
+        x: x,
+        y: y,
+        targetSize: 3 + Math.random() * 3,
+        size: 0,
+        alpha: 0,
+        targetAlpha: 1,
+        parent: parentIndex,
+        children: [],
+        birth: Date.now(),
+        stage: getStageForX(x),
+        pruned: false,
+        completed: false
+      };
+
+      const index = nodes.length;
+      nodes.push(node);
+
+      if (parentIndex !== null) {
+        nodes[parentIndex].children.push(index);
+        connections.push({
+          from: parentIndex,
+          to: index,
+          progress: 0
+        });
+      }
+
+      // Check if this node entered a new stage
+      if (node.stage > activeStage && !chainComplete) {
+        activeStage = node.stage;
+        updateSwimlanes();
+        pruneLosingBranches(index);
+      }
+
+      // Check if chain has exited the right side
+      if (x > width - 60 && !chainComplete) {
+        completeChain(index);
+      }
+
+      return index;
+    }
+
+    function getNextPosition(parentNode, isBranch = false) {
+      const baseX = parentNode.x + 70 + Math.random() * 50;
+      let baseY = parentNode.y;
+
+      if (isBranch) {
+        baseY += (Math.random() > 0.5 ? 1 : -1) * (40 + Math.random() * 30);
+      } else {
+        baseY += (Math.random() - 0.5) * 40;
+      }
+
+      baseY = Math.max(80, Math.min(height - 80, baseY));
+      return { x: baseX, y: baseY };
+    }
+
+    function spawnNext() {
+      if (nodes.length === 0) return;
+
+      // Only spawn from non-pruned, non-completed nodes
+      const eligibleParents = nodes.filter((n, i) =>
+        n.x < width - 80 &&
+        n.children.length < 2 &&
+        !n.pruned &&
+        !n.completed &&
+        Date.now() - n.birth > 150
+      );
+
+      if (eligibleParents.length === 0) {
+        // If no eligible parents and chain isn't complete, start fresh
+        if (!chainComplete) {
+          startNewChain();
+        }
+        return;
+      }
+
+      const parent = eligibleParents[Math.floor(Math.random() * Math.min(3, eligibleParents.length))];
+      const parentIndex = nodes.indexOf(parent);
+      const shouldBranch = parent.children.length === 0 && Math.random() < 0.08;
+
+      if (shouldBranch) {
+        const pos1 = getNextPosition(parent, true);
+        const pos2 = getNextPosition(parent, true);
+        pos2.y = parent.y - (pos1.y - parent.y);
+        addNode(pos1.x, pos1.y, parentIndex);
+        addNode(pos2.x, pos2.y, parentIndex);
+      } else {
+        const pos = getNextPosition(parent, false);
+        addNode(pos.x, pos.y, parentIndex);
+      }
+    }
+
+    function drawSwimlaneLines() {
+      ctx.strokeStyle = 'rgba(255, 122, 26, 0.03)';
+      ctx.lineWidth = 1;
+      for (let i = 1; i < 4; i++) {
+        const x = (width / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+    }
+
+    function drawNode(node) {
+      if (node.alpha <= 0) return;
+
+      const baseAlpha = node.alpha * 0.12;
+
+      const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, node.size + 6);
+      gradient.addColorStop(0, `rgba(255, 122, 26, ${baseAlpha * 0.5})`);
+      gradient.addColorStop(1, 'rgba(255, 122, 26, 0)');
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.size + 6, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 122, 26, ${baseAlpha})`;
+      ctx.fill();
+    }
+
+    function drawConnection(conn) {
+      const from = nodes[conn.from];
+      const to = nodes[conn.to];
+
+      if (conn.progress <= 0) return;
+
+      const endX = from.x + (to.x - from.x) * Math.min(conn.progress, 1);
+      const endY = from.y + (to.y - from.y) * Math.min(conn.progress, 1);
+
+      const baseAlpha = Math.min(from.alpha, to.alpha) * 0.1;
+
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(endX, endY);
+      ctx.strokeStyle = `rgba(255, 122, 26, ${baseAlpha})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      if (conn.progress < 1) {
+        ctx.beginPath();
+        ctx.arc(endX, endY, 2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 122, 26, ${baseAlpha * 1.5})`;
+        ctx.fill();
+      }
+    }
+
+    // Clean up fully faded nodes periodically
+    function cleanupNodes() {
+      for (let i = nodes.length - 1; i >= 0; i--) {
+        if (nodes[i].alpha <= 0 && (nodes[i].pruned || nodes[i].completed)) {
+          // Only remove if all children are also gone or faded
+          const hasActiveChildren = nodes[i].children.some(ci => nodes[ci] && nodes[ci].alpha > 0);
+          if (!hasActiveChildren) {
+            // Mark for skip rather than splice to avoid index issues
+            nodes[i].removed = true;
+          }
+        }
+      }
+    }
+
+    function animate() {
+      ctx.fillStyle = 'rgba(10, 10, 10, 0.12)';
+      ctx.fillRect(0, 0, width, height);
+
+      drawSwimlaneLines();
+
+      const now = Date.now();
+
+      if (now - lastNodeTime > nodeInterval) {
+        spawnNext();
+        lastNodeTime = now;
+        nodeInterval = 180 + Math.random() * 120;
+      }
+
+      nodes.forEach(node => {
+        if (node.removed) return;
+
+        if (node.size < node.targetSize) {
+          node.size += (node.targetSize - node.size) * 0.15;
+        }
+
+        if (node.pruned) {
+          // Pruned nodes fade out
+          node.alpha -= 0.03;
+        } else if (node.completed) {
+          // Completed nodes fade to target alpha
+          if (node.alpha > node.targetAlpha) {
+            node.alpha -= 0.02;
+          }
+        } else {
+          // Active nodes
+          if (node.alpha < node.targetAlpha) {
+            node.alpha += 0.08;
+          }
+          const age = now - node.birth;
+          if (age > 8000) {
+            node.alpha -= 0.01;
+          }
+        }
+      });
+
+      connections.forEach(conn => {
+        if (conn.progress < 1) {
+          conn.progress += 0.12;
+        }
+      });
+
+      // Cleanup old nodes periodically
+      if (Math.random() < 0.01) {
+        cleanupNodes();
+      }
+
+      connections.forEach(drawConnection);
+      nodes.forEach(node => {
+        if (!node.removed) drawNode(node);
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
 </body>
 </html>

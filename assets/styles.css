@@ -38,6 +38,55 @@ a:hover {
   color: var(--accent);
 }
 
+/* Background Animation */
+#bg-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.swimlanes {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.swimlane {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 92px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.06);
+  transition: color 0.4s ease, text-shadow 0.4s ease;
+  -webkit-mask-image: linear-gradient(to bottom,
+    black 0%, black 90px,
+    transparent 120px, transparent 85%,
+    black 95%, black 100%);
+  mask-image: linear-gradient(to bottom,
+    black 0%, black 90px,
+    transparent 120px, transparent 85%,
+    black 95%, black 100%);
+}
+
+.swimlane.active {
+  color: rgba(255, 122, 26, 0.5);
+  text-shadow: 0 0 20px rgba(255, 122, 26, 0.3);
+}
+
 /* Header */
 header {
   position: fixed;
@@ -80,6 +129,8 @@ header {
 
 /* Main */
 main {
+  position: relative;
+  z-index: 2;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -164,6 +215,8 @@ main {
 
 /* Footer */
 footer {
+  position: relative;
+  z-index: 2;
   padding: 24px;
   color: var(--text-muted);
   font-size: 0.85rem;
@@ -188,6 +241,10 @@ footer {
 @media (max-width: 600px) {
   .navbar {
     padding: 20px;
+  }
+
+  .swimlanes {
+    display: none;
   }
 
   main {
